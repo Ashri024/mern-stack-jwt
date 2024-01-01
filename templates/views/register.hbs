@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration form</title>
+</head>
+<body>
+    {{>navbar}}
+    <form action="/register" method="POST">
+    <label for="username">Username: </label>
+    <input type="text" name="username" id="username">
+    <label for="email">Email: </label>
+    <input type="email" name="email" id="email">
+    <label for="password">Password: </label>
+    <input type="password" name="password" id="password">
+    <label for="confirmPass">Confirm Password</label>
+    <input type="password" name="confirmPass" id="confirmPass">
+    <input type="submit" value="Submit">
+    </form>
+</body>
+</html>
