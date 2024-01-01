@@ -6,9 +6,14 @@ require("./db/conn");
 const SignUpForm = require("./models/model");
 const bcrypt= require("bcrypt");
 const jwt= require("jsonwebtoken");
+const cookieParser= require("cookie-parser");
 const app = express()
+app.use(cookieParser());
+const auth= require("./authentication/auth");
+
+
 const port = 3000
-console.log(process.env.SECRET_KEY);
+// console.log(process.env.SECRET_KEY);
 
 const static_path= path.join(__dirname, "../public")
 app.use(express.json());
@@ -27,12 +32,35 @@ app.get('/register', (req, res) => {
 app.get('/login', (req, res) => {
     res.render('login')}
     );
+app.get('/secret', auth,(req, res) => {
+    // console.log("Cookies: ");
+    // console.log(req.cookies);
+    res.render('secret')
+}
+    );
+app.get('/logout', auth,async(req, res) => {
+    try{
+    req.user.tokens= req.user.tokens.filter(e=>{
+        return e.token != req.token;
+    })
+
+    // req.user.tokens=[];
+    res.clearCookie("jwt0");
+    console.log("Logout successfully!!!");
+    await req.user.save();
+    res.render('login');
+    }
+    catch(err){
+        console.log("Error: ", err);
+        res.send(err);
+    }
+}
+    );
 app.post('/login', async(req, res) => {
     try {
     const result = await SignUpForm.find({username: req.body.username});
-    console.log(result);
+    // console.log(result);
     if(result.length >0){
-        console.log(result);
         const pass= req.body.password;
         const storedPass= result[0].password;
         // const status= pass==storedPass? true:false;
@@ -40,8 +68,14 @@ app.post('/login', async(req, res) => {
         const token= await result[0].generateToken();
         console.log("Login token: ",token);
 
+        res.cookie("jwt0", token,{
+            expires: new Date(Date.now()+60000),
+            httpOnly:true
+        });
+        // console.log(cookie);
+
         if(status){
-        console.log("Status: ", status);
+        // console.log("Status: ", status);
         res.status(201).render("home");
         }
         else{
@@ -74,6 +108,12 @@ app.post('/register', async(req, res) => {
 
             const token = await newUser.generateToken();
             console.log("Success token generation: ", token);
+            res.cookie("jwt0", token,{
+                expires: new Date(Date.now()+60000),
+                httpOnly:true
+            });
+            console.log("Cookie set");;
+
             const result= await newUser.save();
             console.log("Result: ", result);
             res.status(201).render("login");
